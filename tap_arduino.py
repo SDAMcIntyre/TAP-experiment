@@ -1,0 +1,172 @@
+import serial
+import matplotlib.pyplot as plt
+import numpy as np
+from psychopy import core, data
+
+def tap(arduino, finger, printMessages):
+    '''
+    arduino: existing serial port connection to arduino
+    finger: which finger to test (1-5)
+    printMessages: do you want to print messages from the arduino?
+    
+    '''
+    finger -= 1 ## convert to 0 index
+    
+    fingerName = ['thumb','index','middle','ring','pinky']
+    
+    # -- prompt for a tap
+    arduinoSays = ''
+    while not arduinoSays == 'tap':
+        arduino.write('tap')
+        arduinoSays = arduino.readline().strip()
+        if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
+    fingerSent = False
+    while not fingerSent:
+        arduino.write(str(finger))
+        arduinoSays = arduino.readline().strip()
+        if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
+        if int(arduinoSays) == finger: fingerSent = True
+    # ----
+    
+    # -- get data from arduino
+    sampleData = []
+    while not arduinoSays == "waiting for tap":
+        arduinoSays = arduino.readline().strip(); 
+        if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
+    gotSampleData = False
+    while not arduinoSays == 'sampling finished':
+        arduinoSays = arduino.readline().strip()
+        if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
+        if arduinoSays == 'sampling finished':
+            gotSampleData = True
+        elif len(arduinoSays)>0:
+            sampleData += [arduinoSays]
+    
+    while not arduinoSays == 'start time':
+        arduinoSays = arduino.readline().strip()
+        if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
+    gotStartTime = False
+    while not gotStartTime:
+        arduinoSays = arduino.readline().strip()
+        if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
+        if len(arduinoSays)>0:
+            gotStartTime = True
+            startTime = int(arduinoSays)
+    
+    tapTimes = []
+    while not arduinoSays == 'tap times':
+        arduinoSays = arduino.readline().strip()
+        if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
+    gotTapTimes = False
+    while not gotTapTimes:
+        arduinoSays = arduino.readline().strip()
+        if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
+        if arduinoSays == 'end of data':
+            gotTapTimes = True
+        elif len(arduinoSays)>0:
+            tapTimes += [arduinoSays]
+    # ----
+    
+    allData = process_tap_data(startTime,sampleData,tapTimes, False, '')
+    
+    allData['promptedFinger'] = fingerName[finger]
+    return allData
+
+def process_tap_data(startTime,sampleData,tapTimes,plotData,savePlotName):
+    fingerName = ['thumb','index','middle','ring','pinky']
+    startTime = int(startTime)/1000.0
+    accelData = []
+    for sample in range(len(sampleData)):
+        accelData += [[int(i) for i in sampleData[sample].split(',')]]
+        accelData[sample][0] = round(accelData[sample][0]/1000.0 - startTime, 3)
+    accelData = np.array(accelData)
+    accelData = accelData.transpose()
+    
+    tapData = {}
+    for f in fingerName:
+        tapData[f] = []
+    for sample in range(len(tapTimes)):
+        thisTap = [i for i in tapTimes[sample].split(',')]
+        tapData[thisTap[0]] += [round(float(thisTap[1])/1000.0 - startTime, 3)]
+    allTapTimes = []
+    for f in fingerName:
+        allTapTimes += tapData[f]
+    orderedTapTimes = sorted(allTapTimes)
+    orderedTapFingers = []
+    for n in range(len(orderedTapTimes)):
+        for f in fingerName:
+            if orderedTapTimes[n] in tapData[f]: 
+                orderedTapFingers+= [f]
+    for n in range(3):
+        if len(orderedTapTimes) == n:
+            orderedTapTimes += ['NA']
+            orderedTapFingers += ['NA']
+
+    if plotData:
+        fig = plt.figure()
+        fig, ax = plt.subplots(1,1)
+        plt.plot(accelData[0], accelData[1], label='x-axis')
+        plt.plot(accelData[0], accelData[2], label='y-axis')
+        plt.plot(accelData[0], accelData[3], label='z-axis')
+        for f in fingerName:
+            if len(tapData[f]) > 0:
+                y = np.zeros([len(tapData[f])])
+                plt.plot(tapData[f], y, label=f, marker = '|', markersize=100, linestyle='None')
+        plt.xlabel('time (ms)')
+        plt.ylabel('accelerometer output')
+        plt.legend()
+        plt.show()
+        if len(savePlotName) > 0:
+            plt.savefig('./'+savePlotName+'.pdf')
+    
+    processedData = {'dateTime' : data.getDateStr(format='%Y-%m-%d_%H-%M-%S'),
+                        'accelData': accelData,
+                        'tapData': tapData, 
+                        'firstThreeTapTimes': orderedTapTimes[0:3],
+                        'firstThreeTapFingers' : orderedTapFingers[0:3]}
+    return processedData
+
+def ping(arduino, printMessages):
+    arduinoSays = ''
+    while not arduinoSays == 'ack':
+        arduino.write('ping')
+        arduinoSays = arduino.readline().strip()
+        if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
+    return arduinoSays
+
+def setup_accel(arduino, finger, printMessages):
+    finger -= 1 ## convert to 0 index
+    arduinoSays = ''
+    while not arduinoSays == 'setup':
+        arduino.write('setup')
+        arduinoSays = arduino.readline().strip()
+        if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
+    fingerSent = False
+    while not fingerSent:
+        arduino.write(str(finger))
+        arduinoSays = arduino.readline().strip()
+        if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
+        if int(arduinoSays) == finger: fingerSent = True
+    return arduinoSays
+
+def ms_to_increment(ms):
+    maxms = 159.375
+    minms = 0
+    scale = 0.625
+    if ms > maxms:
+        warning('max is {} ms' .format(maxms))
+        return 255
+    elif ms < 0:
+        warning('min is {} ms but you should probably use a higher number' .format(minms))
+        return 0
+    else:
+        return int(round(ms/scale))
+
+if __name__ == "__main__":
+    arduino = serial.Serial('COM3', 9600, timeout=0.05); core.wait(2)
+    finger = 2
+    
+    ping(arduino, True)
+    setup_accel(arduino, finger, True)
+    tapResults = tap(arduino, finger, False)
+    print tapResults
