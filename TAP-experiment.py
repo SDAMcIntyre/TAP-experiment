@@ -15,8 +15,8 @@ exptInfo = {'01. Participant Code':'000',
             '07. Left fingers to use (1 thumb - 5 pinky)':'',
             '08. Provide feedback':True,
             '09. Folder for saving data':'TAP-data',
-#            '10. Motor activation duration (ms)':100,
-#            '11. Motor intensity (0 - 255)':255,
+            '10. Motor activation duration (ms)':100,
+            '11. Motor intensity (0 - 255)':255,
 #            '12. Tap threshold (0 - 255)':50,
 #            '13. Max tap duration (0 - 159 ms)':20,
             '14. Right arduino serial port':'COM3',
@@ -96,6 +96,15 @@ for h in handsToUse:
     print(h+' ')
     ping(arduino[h],exptInfo['18. Print arduino messages'])
 # --
+
+# -- motor settings --
+for h in handsToUse:
+    motor_duration(arduino[h], exptInfo['10. Motor activation duration (ms)'],
+                    exptInfo['18. Print arduino messages'])
+    motor_intensity(arduino[h], exptInfo['11. Motor intensity (0 - 255)'],
+                    exptInfo['18. Print arduino messages'])
+
+#--
 
 # -- setup accelerometers --
 for finger in leftToUse:

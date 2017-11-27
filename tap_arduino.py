@@ -134,6 +134,42 @@ def ping(arduino, printMessages):
         if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
     return arduinoSays
 
+def motor_duration(arduino, duration, printMessages):
+    arduinoSays = ''
+    while not arduinoSays == 'motorduration':
+        arduino.write('motorduration')
+        arduinoSays = arduino.readline().strip()
+        if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
+    durationSent = False
+    while not durationSent:
+        arduino.write(str(int(duration)))
+        arduinoSays = arduino.readline().strip()
+        if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
+        if int(arduinoSays) == int(duration): durationSent = True
+    return arduinoSays
+
+def motor_intensity(arduino, intensity, printMessages):
+    minintensity = 0
+    maxintensity = 255
+    if intensity > maxintensity:
+        warning('max intensity is {}' .format(maxintensity))
+        intensity = 255
+    elif intensity <= minintensity:
+        warning('setting motor to {} means it will not activate' .format(minintensity))
+        intensity = 0
+    arduinoSays = ''
+    while not arduinoSays == 'intensity':
+        arduino.write('intensity')
+        arduinoSays = arduino.readline().strip()
+        if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
+    intensitySent = False
+    while not intensitySent:
+        arduino.write(str(int(intensity)))
+        arduinoSays = arduino.readline().strip()
+        if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
+        if int(arduinoSays) == int(intensity): intensitySent = True
+    return arduinoSays
+
 def setup_accel(arduino, finger, printMessages):
     finger -= 1 ## convert to 0 index
     arduinoSays = ''

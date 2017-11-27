@@ -79,7 +79,7 @@ void loop(){
     accelerometerRange = serial_get_int(echoSerial);
   } else if (pythonSays == "threshold") {
     tapThreshold = serial_get_int(echoSerial);
-  } else if (pythonSays == "maxtapduration") {
+  } else if (pythonSays == "threshduration") {
     maxTapDuration = serial_get_int(echoSerial);
   } else if (pythonSays == "setup") {
     accel = serial_get_int(echoSerial); // which accelerometer to setup
@@ -88,7 +88,7 @@ void loop(){
   // SETUP MOTOR
   } else if (pythonSays == "intensity") {
     motorPWM = serial_get_int(echoSerial);
-  } else if (pythonSays = "motorduration") {
+  } else if (pythonSays == "motorduration") {
     motorDuration = serial_get_int(echoSerial);
 
   // PROMPTED FOR A TAP
