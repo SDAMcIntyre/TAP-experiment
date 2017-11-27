@@ -228,7 +228,9 @@ void record_interrupt(int finger) {
   byte interrupts = accelerometer[finger].getInterruptSource();
   if (accelerometer[finger].triggered(interrupts, ADXL345_SINGLE_TAP) && interruptN[finger] < maxTaps){
     long timeNow = micros();
-    if ( interruptN[finger] < 0 || timeNow > tapDebounce*1000 + interruptTime[finger][(interruptN[finger]-1) % maxTaps] ) {
+    if ( interruptN[finger] < 0 || 
+    (interruptN[finger] > 0 && timeNow > tapDebounce*1000 + interruptTime[finger][(interruptN[finger]-1) % maxTaps])
+    ) {
       interruptN[finger]++;
       interruptTime[finger][interruptN[finger]] = timeNow;      
     }
