@@ -5,6 +5,7 @@ const int maxFingers = 5;
 int nFingers = 1; //5; //2
 String fingerName[maxFingers] = {"thumb"}; //{"thumb","index","middle","ring","pinky"};
 long samplingTime = 2500;     // ms time to keep sampling after tap detected
+long lagTime = 100;           // ms time to sample before activating motor
 const int maxTaps = 3;        // number of taps to record per finger for a single cue
 long tapDebounce = 200;       // ms window to ignore tap triggers after a trigger
 
@@ -87,7 +88,7 @@ void loop(){
   // PROMPTED FOR A TAP
   } else if (pythonSays == "tap") {
     tapFinger = serial_get_int(echoSerial); // which finger should tap
-    get_finger_tap(tapFinger, motorDuration*1000, samplingTime*1000); // convert ms to us
+    get_finger_tap(tapFinger, motorDuration*1000, samplingTime*1000, lagTime*1000); // convert ms to us
   
   // PUT ACCELEROMETER IN STANDBY
   } else if (pythonSays=="standby") {
@@ -103,7 +104,7 @@ void loop(){
 
 //  FUNCTIONS
 
-void get_finger_tap(int tapFinger, long motorDuration, long samplingTime) {
+void get_finger_tap(int tapFinger, long motorDuration, long samplingTime, long lagTime) {
   // This function uses micros() for timing so all input times should be in microseconds
   Serial.println("waiting for tap"); 
   int x,y,z; // axes sampled
@@ -111,12 +112,12 @@ void get_finger_tap(int tapFinger, long motorDuration, long samplingTime) {
   long startTime; // time when prompted for a tap
   long firstTapTime = 0;
   bool sampling = true;
-  bool motorOn = true;
+  bool motorSwitchedOn = false;
+  bool motorSwitchedOff = false;
   
   startTime = micros();
   clear_all_interrupts();
   attach_all_interrupts(); // attach interrupts and link to ISR
-  analogWrite(motor[tapFinger], motorPWM); // buzz
 
   while (sampling) {
     // Sample accelerometer data, t gives us the current/sample time
@@ -128,11 +129,18 @@ void get_finger_tap(int tapFinger, long motorDuration, long samplingTime) {
     Serial.print(y);
     Serial.print(",");
     Serial.println(z);
-    
+
+    // Check if the motor should switch on
+    if ( motorSwitchedOn == false && (t - startTime > lagTime) ) {
+      analogWrite(motor[tapFinger], motorPWM); // buzz
+      motorSwitchedOn = true;
+      Serial.println("motor on");
+    }
     // Check if the motor should switch off
-    if (motorOn && (t - startTime > motorDuration)) {
+    if ( motorSwitchedOff == false && (t - startTime > (lagTime + motorDuration)) ) {
       analogWrite(motor[tapFinger], 0); // no buzz
-      motorOn = false;
+      motorSwitchedOff = true;
+      Serial.println("motor off");
     }
     
     // Tap Detection
