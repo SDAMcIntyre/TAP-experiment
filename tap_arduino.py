@@ -170,19 +170,51 @@ def motor_intensity(arduino, intensity, printMessages):
         if int(arduinoSays) == int(intensity): intensitySent = True
     return arduinoSays
 
-def setup_accel(arduino, finger, printMessages):
-    finger -= 1 ## convert to 0 index
+def accel_range(arduino, range, printMessages):
+    defaultRange = 16
+    if range not in [2,4,8,16]:
+        warning('{} not a valid accelerometer range. Set to default ({}G)' .format(range,defaultRange))
+        range = 16
     arduinoSays = ''
-    while not arduinoSays == 'setup':
-        arduino.write('setup')
+    while not arduinoSays == 'range':
+        arduino.write('range')
         arduinoSays = arduino.readline().strip()
         if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
-    fingerSent = False
-    while not fingerSent:
-        arduino.write(str(finger))
+    rangeSent = False
+    while not rangeSent:
+        arduino.write(str(range))
         arduinoSays = arduino.readline().strip()
         if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
-        if int(arduinoSays) == finger: fingerSent = True
+        if int(arduinoSays) == range: rangeSent = True
+    return arduinoSays
+
+def accel_threshold(arduino, threshold, printMessages):
+    threshold = ms_to_increment(threshold)
+    arduinoSays = ''
+    while not arduinoSays == 'threshold':
+        arduino.write('threshold')
+        arduinoSays = arduino.readline().strip()
+        if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
+    thresholdSent = False
+    while not thresholdSent:
+        arduino.write(str(threshold))
+        arduinoSays = arduino.readline().strip()
+        if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
+        if int(arduinoSays) == threshold: thresholdSent = True
+    return arduinoSays
+
+def accel_duration(arduino, duration, printMessages):
+    arduinoSays = ''
+    while not arduinoSays == 'threshduration':
+        arduino.write('threshduration')
+        arduinoSays = arduino.readline().strip()
+        if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
+    durationSent = False
+    while not durationSent:
+        arduino.write(str(int(duration)))
+        arduinoSays = arduino.readline().strip()
+        if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
+        if int(arduinoSays) == int(duration): durationSent = True
     return arduinoSays
 
 def ms_to_increment(ms):
@@ -197,6 +229,21 @@ def ms_to_increment(ms):
         return 0
     else:
         return int(round(ms/scale))
+
+def setup_accel(arduino, finger, printMessages):
+    finger -= 1 ## convert to 0 index
+    arduinoSays = ''
+    while not arduinoSays == 'setup':
+        arduino.write('setup')
+        arduinoSays = arduino.readline().strip()
+        if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
+    fingerSent = False
+    while not fingerSent:
+        arduino.write(str(finger))
+        arduinoSays = arduino.readline().strip()
+        if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
+        if int(arduinoSays) == finger: fingerSent = True
+    return arduinoSays
 
 if __name__ == "__main__":
     arduino = serial.Serial('COM3', 9600, timeout=0.05); core.wait(2)

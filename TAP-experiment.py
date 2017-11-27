@@ -17,8 +17,9 @@ exptInfo = {'01. Participant Code':'000',
             '09. Folder for saving data':'TAP-data',
             '10. Motor activation duration (ms)':100,
             '11. Motor intensity (0 - 255)':255,
-#            '12. Tap threshold (0 - 255)':50,
-#            '13. Max tap duration (0 - 159 ms)':20,
+            '12. Accelerometer range (2,4,8,16G)':16,
+            '12. Tap threshold (0 - 255)':100,
+            '13. Max tap duration (0 - 159 ms)':150,
             '14. Right arduino serial port':'COM3',
             '15. Left arduino serial port':'COM5',
             '16. Serial baud rate':9600,
@@ -103,8 +104,16 @@ for h in handsToUse:
                     exptInfo['18. Print arduino messages'])
     motor_intensity(arduino[h], exptInfo['11. Motor intensity (0 - 255)'],
                     exptInfo['18. Print arduino messages'])
-
 #--
+
+# -- accelerometer settings --
+for h in handsToUse:
+    accel_range(arduino[h], exptInfo['12. Accelerometer range (2,4,8,16G)'],
+                    exptInfo['18. Print arduino messages'])
+    accel_threshold(arduino[h], exptInfo['12. Tap threshold (0 - 255)'],
+                    exptInfo['18. Print arduino messages'])
+    accel_duration(arduino[h], exptInfo['13. Max tap duration (0 - 159 ms)'],
+                    exptInfo['18. Print arduino messages'])
 
 # -- setup accelerometers --
 for finger in leftToUse:
