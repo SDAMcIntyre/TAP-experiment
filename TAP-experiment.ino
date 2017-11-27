@@ -2,17 +2,16 @@
 
 // EXPERIMENT VARIABLES
 const int maxFingers = 5;
-int nFingers = 5; //2
-String fingerName[maxFingers] = {"thumb","index","middle","ring","pinky"};
-long tapTimeout = 5000;       // ms time to wait for a tap before timing out
-long samplingTime = 2000;     // ms time to keep sampling after tap detected
+int nFingers = 1; //5; //2
+String fingerName[maxFingers] = {"thumb"}; //{"thumb","index","middle","ring","pinky"};
+long samplingTime = 2500;     // ms time to keep sampling after tap detected
 const int maxTaps = 3;        // number of taps to record per finger for a single cue
 long tapDebounce = 200;       // ms window to ignore tap triggers after a trigger
 
 // ACCELEROMETER VARIABLES
 ADXL345 accelerometer[maxFingers] = {}; 
-int chipSelect[maxFingers] = {22,24,26,28,30}; //{9,10};
-int interruptPin[maxFingers] = /{3,21,20,19,18}; //{2,3};
+int chipSelect[maxFingers] = {9}; //{22,24,26,28,30}; //{9,10};
+int interruptPin[maxFingers] = {2}; //{3,21,20,19,18}; //{2,3};
 volatile long interruptTime[maxFingers][maxTaps] = {};
 volatile long interruptN[maxFingers] = {};
 int accelerometerRange = 16;  // 2G, 4G, 8G, 16G
@@ -20,7 +19,7 @@ int tapThreshold = 50;        // minimum amplitude for a tap (0-255), 62.5 mG pe
 int maxTapDuration = 32;      // time exceeding threshold must be shorter than this (0-255), 0.625 ms per increment (LSB); 16 is 10ms
 
 // MOTOR VARIABLES
-int motor[maxFingers] = {4,5,6,7,8};
+int motor[maxFingers] = {5}; //{4,5,6,7,8};
 long motorDuration = 100;     // ms
 int motorPWM = 255;
 
@@ -69,8 +68,6 @@ void loop(){
   // CHANGE/SET EXPERIMENT VARIABLES
   } else if (pythonSays == "nFingers") {
     nFingers = serial_get_int(echoSerial);
-  } else if (pythonSays == "tapTimeout") {
-    tapTimeout = serial_get_int(echoSerial);
   } else if (pythonSays == "samplingTime") {
     samplingTime = serial_get_int(echoSerial);
   } else if (pythonSays == "tapDebounce") {
@@ -90,7 +87,7 @@ void loop(){
   // PROMPTED FOR A TAP
   } else if (pythonSays == "tap") {
     tapFinger = serial_get_int(echoSerial); // which finger should tap
-    get_finger_tap(tapFinger, motorDuration*1000, tapTimeout*1000, samplingTime*1000); // convert ms to us
+    get_finger_tap(tapFinger, motorDuration*1000, samplingTime*1000); // convert ms to us
   
   // PUT ACCELEROMETER IN STANDBY
   } else if (pythonSays=="standby") {
@@ -106,7 +103,7 @@ void loop(){
 
 //  FUNCTIONS
 
-void get_finger_tap(int tapFinger, long motorDuration, long tapTimeout, long samplingTime) {
+void get_finger_tap(int tapFinger, long motorDuration, long samplingTime) {
   // This function uses micros() for timing so all input times should be in microseconds
   Serial.println("waiting for tap"); 
   int x,y,z; // axes sampled
@@ -148,7 +145,7 @@ void get_finger_tap(int tapFinger, long motorDuration, long tapTimeout, long sam
     }
     
     // Check for timeout
-    if ((firstTapTime == 0 && (t - startTime > tapTimeout)) || (firstTapTime > 0 && (t - firstTapTime > samplingTime)) ) {
+    if (t - startTime > samplingTime) {
       sampling = false;
     }
   }
