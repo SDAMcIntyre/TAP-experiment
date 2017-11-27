@@ -109,8 +109,7 @@ void get_finger_tap(int tapFinger, long motorDuration, long samplingTime, long l
   Serial.println("waiting for tap"); 
   int x,y,z; // axes sampled
   long t; //sample time
-  long startTime; // time when prompted for a tap
-  long firstTapTime = 0;
+  long startTime; // time when sampling started
   bool sampling = true;
   bool motorSwitchedOn = false;
   bool motorSwitchedOff = false;
@@ -143,22 +142,12 @@ void get_finger_tap(int tapFinger, long motorDuration, long samplingTime, long l
       Serial.println("motor off");
     }
     
-    // Tap Detection
-    if (firstTapTime == 0) {
-      for (int finger=0; finger<nFingers; finger++) {
-        if(interruptTime[finger][0] > startTime) { //interruptTime is set in the ISRs
-          firstTapTime = interruptTime[finger][0];
-        }  
-      }
-    }
-    
     // Check for timeout
     if (t - startTime > samplingTime) {
       sampling = false;
     }
   }
   detach_all_interrupts();
-  firstTapTime = 0;
   Serial.println("sampling finished");
   Serial.println("start time");
   Serial.println(startTime);
@@ -239,7 +228,7 @@ void record_interrupt(int finger) {
   byte interrupts = accelerometer[finger].getInterruptSource();
   if (accelerometer[finger].triggered(interrupts, ADXL345_SINGLE_TAP) && interruptN[finger] < maxTaps){
     long timeNow = micros();
-    if (interruptN[finger] < 0 || timeNow > tapDebounce*1000 + interruptTime[finger][(interruptN[finger]-1) % maxTaps]) {
+    if ( interruptN[finger] < 0 || timeNow > tapDebounce*1000 + interruptTime[finger][(interruptN[finger]-1) % maxTaps] ) {
       interruptN[finger]++;
       interruptTime[finger][interruptN[finger]] = timeNow;      
     }
