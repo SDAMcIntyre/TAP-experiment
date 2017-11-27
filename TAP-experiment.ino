@@ -7,7 +7,7 @@ String fingerName[maxFingers] = {"thumb"}; //{"thumb","index","middle","ring","p
 long samplingTime = 2500;     // ms time to keep sampling after tap detected
 long lagTime = 100;           // ms time to sample before activating motor
 const int maxTaps = 3;        // number of taps to record per finger for a single cue
-long tapDebounce = 200;       // ms window to ignore tap triggers after a trigger
+long tapDebounce = 50;       // ms window to ignore tap triggers after a trigger
 
 // ACCELEROMETER VARIABLES
 ADXL345 accelerometer[maxFingers] = {}; 
@@ -16,8 +16,8 @@ int interruptPin[maxFingers] = {2}; //{3,21,20,19,18}; //{2,3};
 volatile long interruptTime[maxFingers][maxTaps] = {};
 volatile long interruptN[maxFingers] = {};
 int accelerometerRange = 16;  // 2G, 4G, 8G, 16G
-int tapThreshold = 50;        // minimum amplitude for a tap (0-255), 62.5 mG per increment (LSB)
-int maxTapDuration = 32;      // time exceeding threshold must be shorter than this (0-255), 0.625 ms per increment (LSB); 16 is 10ms
+int tapThreshold = 100;        // minimum amplitude for a tap (0-255), 62.5 mG per increment (LSB)
+int maxTapDuration = 240;      // time exceeding threshold must be shorter than this (0-255), 0.625 ms per increment (LSB); 16 is 10ms
 
 // MOTOR VARIABLES
 int motor[maxFingers] = {5}; //{4,5,6,7,8};
@@ -133,13 +133,11 @@ void get_finger_tap(int tapFinger, long motorDuration, long samplingTime, long l
     if ( motorSwitchedOn == false && (t - startTime > lagTime) ) {
       analogWrite(motor[tapFinger], motorPWM); // buzz
       motorSwitchedOn = true;
-      Serial.println("motor on");
     }
     // Check if the motor should switch off
     if ( motorSwitchedOff == false && (t - startTime > (lagTime + motorDuration)) ) {
       analogWrite(motor[tapFinger], 0); // no buzz
       motorSwitchedOff = true;
-      Serial.println("motor off");
     }
     
     // Check for timeout
