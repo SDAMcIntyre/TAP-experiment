@@ -15,31 +15,33 @@ exptInfo = {'01. Participant Code':'000',
             '07. Left fingers to use (1 thumb - 5 pinky)':'',
             '08. Provide feedback':True,
             '09. Folder for saving data':'TAP-data',
-            '10. Motor activation duration (ms)':100,
-            '11. Motor intensity (0 - 255)':255,
-            '12. Accelerometer range (2,4,8,16G)':16,
-            '12. Tap threshold (0 - 255)':100,
-            '13. Max tap duration (0 - 159 ms)':150,
-            '14. Right arduino serial port':'COM3',
-            '15. Left arduino serial port':'COM5',
-            '16. Serial baud rate':9600,
-            '17. Serial timeout (sec)':0.05,
-            '18. Print arduino messages':False}
-exptInfo['19. Date and time']= data.getDateStr(format='%Y-%m-%d_%H-%M-%S') ##add the current time
+            '10. Sampling time (ms)':2500,
+            '11. Tap debounce (ms)':50,
+            '12. Motor activation duration (ms)':100,
+            '13. Motor intensity (0 - 255)':255,
+            '14. Accelerometer range (2,4,8,16G)':16,
+            '15. Tap threshold (0 - 255)':100,
+            '16. Max tap duration (0 - 159 ms)':150,
+            '17. Right arduino serial port':'COM3',
+            '18. Left arduino serial port':'COM5',
+            '19. Serial baud rate':9600,
+            '20. Serial timeout (sec)':0.05,
+            '21. Print arduino messages':False}
+exptInfo['22. Date and time']= data.getDateStr(format='%Y-%m-%d_%H-%M-%S') ##add the current time
 
 dlg = gui.DlgFromDict(exptInfo, title='Experiment details', 
-                    fixed=['19. Date and time'])
+                    fixed=['22. Date and time'])
 if dlg.OK:
     pass
 else:
     core.quit() ## the user hit cancel so exit
 
 try:
-    rightToUse = [int(i) for i in exptInfo['06. Right fingers to use (1 thumb - 5 pinky)'].split(',')]
+    rightToUse = [int(i)-1 for i in exptInfo['06. Right fingers to use (1 thumb - 5 pinky)'].split(',')]
 except:
     rightToUse = []
 try:
-    leftToUse = [int(i) for i in exptInfo['07. Left fingers to use (1 thumb - 5 pinky)'].split(',')]
+    leftToUse = [int(i)-1 for i in exptInfo['07. Left fingers to use (1 thumb - 5 pinky)'].split(',')]
 except:
     leftToUse = []
 
@@ -47,10 +49,10 @@ handsToUse = []
 arduinoPort = {}
 if len(rightToUse) > 0: 
     handsToUse.append('right')
-    arduinoPort['right'] = exptInfo['14. Right arduino serial port']
+    arduinoPort['right'] = exptInfo['17. Right arduino serial port']
 if len(leftToUse) > 0: 
     handsToUse.append('left')
-    arduinoPort['left'] = exptInfo['15. Left arduino serial port']
+    arduinoPort['left'] = exptInfo['18. Left arduino serial port']
 if len(handsToUse) == 0:
     core.quit('You must use at least one motor')
 # ----
@@ -60,7 +62,7 @@ if exptInfo['02. Test number (0 for practice)'] > 0:
     dataFolder = './'+exptInfo['09. Folder for saving data']+'/'
     if not os.path.exists(dataFolder):
         os.makedirs(dataFolder)
-    fileName = dataFolder + exptInfo['19. Date and time']+'_'+ exptInfo['01. Participant Code']
+    fileName = dataFolder + exptInfo['22. Date and time']+'_'+ exptInfo['01. Participant Code']
     infoFile = open(fileName+'_info.csv', 'w') 
     for k,v in exptInfo.iteritems(): infoFile.write(k + ',' + str(v) + '\n')
     infoFile.close()
@@ -92,34 +94,43 @@ if exptInfo['08. Provide feedback']:
 arduino = {}
 for h in handsToUse:
     arduino[h] = serial.Serial(arduinoPort[h], 
-                    exptInfo['16. Serial baud rate'],
-                    timeout=exptInfo['17. Serial timeout (sec)'])
+                    exptInfo['19. Serial baud rate'],
+                    timeout=exptInfo['20. Serial timeout (sec)'])
     print(h+' ')
-    ping(arduino[h],exptInfo['18. Print arduino messages'])
+    ping(arduino[h],exptInfo['21. Print arduino messages'])
 # --
+
+# -- data recording settings --
+for h in handsToUse:
+    sampling_time(arduino[h], exptInfo['10. Sampling time (ms)'],
+                    exptInfo['21. Print arduino messages'])
+    tap_debounce(arduino[h], exptInfo['11. Tap debounce (ms)'],
+                    exptInfo['21. Print arduino messages'])
+#--
 
 # -- motor settings --
 for h in handsToUse:
-    motor_duration(arduino[h], exptInfo['10. Motor activation duration (ms)'],
-                    exptInfo['18. Print arduino messages'])
-    motor_intensity(arduino[h], exptInfo['11. Motor intensity (0 - 255)'],
-                    exptInfo['18. Print arduino messages'])
+    motor_duration(arduino[h], exptInfo['12. Motor activation duration (ms)'],
+                    exptInfo['21. Print arduino messages'])
+    motor_intensity(arduino[h], exptInfo['13. Motor intensity (0 - 255)'],
+                    exptInfo['21. Print arduino messages'])
 #--
 
 # -- accelerometer settings --
 for h in handsToUse:
-    accel_range(arduino[h], exptInfo['12. Accelerometer range (2,4,8,16G)'],
-                    exptInfo['18. Print arduino messages'])
-    accel_threshold(arduino[h], exptInfo['12. Tap threshold (0 - 255)'],
-                    exptInfo['18. Print arduino messages'])
-    accel_duration(arduino[h], exptInfo['13. Max tap duration (0 - 159 ms)'],
-                    exptInfo['18. Print arduino messages'])
+    accel_range(arduino[h], exptInfo['14. Accelerometer range (2,4,8,16G)'],
+                    exptInfo['21. Print arduino messages'])
+    accel_threshold(arduino[h], exptInfo['15. Tap threshold (0 - 255)'],
+                    exptInfo['21. Print arduino messages'])
+    accel_duration(arduino[h], exptInfo['16. Max tap duration (0 - 159 ms)'],
+                    exptInfo['21. Print arduino messages'])
+#--
 
 # -- setup accelerometers --
 for finger in leftToUse:
-    setup_accel(arduino['left'], finger, exptInfo['18. Print arduino messages'])
+    setup_accel(arduino['left'], finger, exptInfo['21. Print arduino messages'])
 for finger in rightToUse:
-    setup_accel(arduino['right'], finger, exptInfo['18. Print arduino messages'])
+    setup_accel(arduino['right'], finger, exptInfo['21. Print arduino messages'])
 # --
 
 
@@ -134,7 +145,7 @@ for thisTrial in trials:
     ## cue for a tap 
     tapResults = tap(arduino[thisTrial['hand']], 
                     thisTrial['finger'], 
-                    exptInfo['18. Print arduino messages'])
+                    exptInfo['21. Print arduino messages'])
     correct = int(fingerName[thisTrial['finger']] == tapResults['firstThreeTapFingers'][0])
     trials.data.add('correct',correct)
     

@@ -10,7 +10,6 @@ def tap(arduino, finger, printMessages):
     printMessages: do you want to print messages from the arduino?
     
     '''
-    finger -= 1 ## convert to 0 index
     
     fingerName = ['thumb','index','middle','ring','pinky']
     
@@ -134,6 +133,34 @@ def ping(arduino, printMessages):
         if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
     return arduinoSays
 
+def sampling_time(arduino, samplingTime, printMessages):
+    arduinoSays = ''
+    while not arduinoSays == 'samplingTime':
+        arduino.write('samplingTime')
+        arduinoSays = arduino.readline().strip()
+        if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
+    samplingTimeSent = False
+    while not samplingTimeSent:
+        arduino.write(str(int(samplingTime)))
+        arduinoSays = arduino.readline().strip()
+        if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
+        if int(arduinoSays) == int(samplingTime): samplingTimeSent = True
+    return arduinoSays
+
+def tap_debounce(arduino, tapDebounce, printMessages):
+    arduinoSays = ''
+    while not arduinoSays == 'tapDebounce':
+        arduino.write('tapDebounce')
+        arduinoSays = arduino.readline().strip()
+        if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
+    tapDebounceSent = False
+    while not tapDebounceSent:
+        arduino.write(str(int(tapDebounce)))
+        arduinoSays = arduino.readline().strip()
+        if printMessages and len(arduinoSays)> 0: print('arduino: {}' .format(arduinoSays))
+        if int(arduinoSays) == int(tapDebounce): tapDebounceSent = True
+    return arduinoSays
+
 def motor_duration(arduino, duration, printMessages):
     arduinoSays = ''
     while not arduinoSays == 'motorduration':
@@ -231,7 +258,6 @@ def ms_to_increment(ms):
         return int(round(ms/scale))
 
 def setup_accel(arduino, finger, printMessages):
-    finger -= 1 ## convert to 0 index
     arduinoSays = ''
     while not arduinoSays == 'setup':
         arduino.write('setup')
