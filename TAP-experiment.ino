@@ -2,8 +2,8 @@
 
 // EXPERIMENT VARIABLES
 const int maxFingers = 5;
-int nFingers = 1; //5; //2
-String fingerName[maxFingers] = {"thumb"}; //{"thumb","index","middle","ring","pinky"};
+int nFingers = 5; //1;
+String fingerName[maxFingers] = {"thumb","index","middle","ring","pinky"}; //{"thumb"};
 long samplingTime = 2500;     // ms time to keep sampling after tap detected
 long lagTime = 100;           // ms time to sample before activating motor
 const int maxTaps = 3;        // number of taps to record per finger for a single cue
@@ -11,8 +11,8 @@ long tapDebounce = 50;       // ms window to ignore tap triggers after a trigger
 
 // ACCELEROMETER VARIABLES
 ADXL345 accelerometer[maxFingers] = {}; 
-int chipSelect[maxFingers] = {9}; //{22,24,26,28,30}; //{9,10};
-int interruptPin[maxFingers] = {2}; //{3,21,20,19,18}; //{2,3};
+int chipSelect[maxFingers] = {22,24,26,28,30}; //{9};
+int interruptPin[maxFingers] = {3,21,20,19,18}; //{2};
 volatile long interruptTime[maxFingers][maxTaps] = {};
 volatile long interruptN[maxFingers] = {};
 int accelerometerRange = 16;  // 2G, 4G, 8G, 16G
@@ -20,7 +20,7 @@ int tapThreshold = 100;        // minimum amplitude for a tap (0-255), 62.5 mG p
 int maxTapDuration = 240;      // time exceeding threshold must be shorter than this (0-255), 0.625 ms per increment (LSB); 16 is 10ms
 
 // MOTOR VARIABLES
-int motor[maxFingers] = {5}; //{4,5,6,7,8};
+int motor[maxFingers] = {4,5,6,7,8}; //{5};
 long motorDuration = 100;     // ms
 int motorPWM = 255;
 
